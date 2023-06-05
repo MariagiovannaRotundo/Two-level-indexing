@@ -32,7 +32,7 @@ class LOUDS_PatriciaTrie {
 
     //method to create the Patricia trie
     // - input: a vector with the strings to use for the building; a vector of pointers to elaf in the order the leaves
-    void build_trie(std::vector<std::string>& wordList, std::vector<size_t>& values_sorted){
+    void build_trie(std::vector<std::string>& wordList){
         
         /* 4 is a good number beacuse the number of 0s is equal to the number of strings + the 
         number of internal nodes. For each internal node there is an entering arc except for the root.
@@ -71,7 +71,7 @@ class LOUDS_PatriciaTrie {
                 break;
             }
             if(b.j-b.i==1){ //the node has not children but a string (value), a leaf
-                values_tmp[v++] = values_sorted[b.i];
+                values_tmp[v++] = b.i;
                 p++; //by default all bits in louds_tmp[p] there is 0. So, only increment p
                 bfs_visit.pop();  
                 continue;

@@ -113,16 +113,14 @@ int main(int argc, char* argv[]) {
 
     {
         std::vector<std::string> first_strings;
-        std::vector<size_t> values_sorted; //pointers to the leaves in leaves order
         //get the first string of each logical block
         for(size_t i=0; i<b_ranks.size()-1; i++){ //the last value is associated at the end of the last block 
             std::string s(mmapped_content + i * logical_block_size);
             first_strings.push_back(s);
-            values_sorted.push_back(i);
         }
         // create the trie
         auto t0 = std::chrono::high_resolution_clock::now();
-        louds_pt.build_trie(first_strings, values_sorted);
+        louds_pt.build_trie(first_strings);
         auto t1 = std::chrono::high_resolution_clock::now();
         us = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
         std::cout << "\nbuilt the trie in " << us << " us" << std::endl;    
@@ -168,7 +166,7 @@ int main(int argc, char* argv[]) {
     }
 
     // create the select_0 data structure
-    sux::bits::SimpleSelectZeroHalf louds_select_0(bitvect, louds.size()); 
+    sux::bits::SimpleSelectZeroHalf louds_select_0(bitvect, louds.size());
 
     //size of the Patricia Trie
     size_t size = louds_pt.getSize(louds_select_0, blocks_rank);  
