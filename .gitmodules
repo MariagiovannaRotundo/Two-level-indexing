@@ -4,3 +4,6 @@
 [submodule "indexing_level_tests/path_decomposed_tries"]
 	path = indexing_level_tests/path_decomposed_tries
 	url = https://github.com/ot/path_decomposed_tries
+[submodule "indexing_level_tests/CoCo-trie"]
+	path = indexing_level_tests/CoCo-trie
+	url = https://github.com/aboffa/CoCo-trie
