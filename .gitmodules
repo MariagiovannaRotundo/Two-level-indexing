@@ -1,3 +1,6 @@
 [submodule "indexing_level_tests/fast_succinct_trie"]
 	path = indexing_level_tests/fast_succinct_trie
 	url = https://github.com/kampersanda/fast_succinct_trie
+[submodule "indexing_level_tests/path_decomposed_tries"]
+	path = indexing_level_tests/path_decomposed_tries
+	url = https://github.com/ot/path_decomposed_tries
