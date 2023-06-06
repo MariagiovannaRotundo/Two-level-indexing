@@ -7,7 +7,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNDEBUG -O3 -pthread -g" )
 
 
 add_subdirectory(indexing_level_tests)
-add_subdirectory(CoCo-two_level_tests)
+add_subdirectory(two_level_tests)
 
 
 
