@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.10)
+cmake_minimum_required (VERSION 3.12)
 project (two_level_approach)
 set(CMAKE_CXX_STANDARD 20)
 

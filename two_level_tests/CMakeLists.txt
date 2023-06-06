@@ -28,6 +28,9 @@ target_link_libraries(generate_test_PT divsufsort sdsl divsufsort64)
 add_executable(generate_test_array generate_test_array.cpp)
 target_link_libraries(generate_test_array divsufsort sdsl divsufsort64)
 
+add_executable(save_first_strings save_first_strings.cpp)
+target_link_libraries(save_first_strings divsufsort sdsl divsufsort64)
+
 
 
 
