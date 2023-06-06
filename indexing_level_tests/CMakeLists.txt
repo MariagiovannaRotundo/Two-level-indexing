@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 3.10)
-project (post_tesi)
+project (indexing_level)
 set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_CXX_STANDARD_REQUIRED on)
@@ -27,7 +27,7 @@ target_link_libraries(test_FST sdsl)
 
 
 add_executable(test_PDT test_PDT.cpp)
-target_include_directories(test_PDT PRIVATE path_decomposed_tries)
+target_include_directories(test_PDT PRIVATE path_decomposed_tries CoCo-trie/lib/ds2i/succinct)
 target_link_libraries(test_PDT succinct)
 
 add_executable(generate_coco generate_coco.cpp)
