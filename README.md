@@ -22,7 +22,7 @@ chmod +x compile.sh
 
 There are two different types of experiment: the one to evaluate the different approaches in internal memory time and space consumption to index a subset of strings, and the one to evaluate the two-level performance.
 
-### How to launch experiments
+#### How to launch experiments
 
 Creare a directory with the dataset to use for the experiments.
 
@@ -31,9 +31,7 @@ Creare a directory with the dataset to use for the experiments.
 3. `./run_two_level.sh dataset.txt` runs the two level experiments writing results in a two_level_results.csv file in "results" directory.
 
 
-
-
-### Two level experiments
+#### Two level experiments
 
 To execute experiments by considering two-level solutions the first thing done is the generation of the storage levels and of the queries to use for the evaluation 
 By deafault, the number of repetitions of each experiment is fixed to 3.
