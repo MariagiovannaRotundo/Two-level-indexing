@@ -15,6 +15,9 @@ Repository to reproduce experiments of the two-level approach based on a succinc
 git clone https://github.com/MariagiovannaRotundo/Two-level-indexing
 cd Two-level-indexing
 chmod +x compile.sh
+chmod +x prepare.sh
+chmod +x run_indexing.sh
+chmod +x run_two_level.sh
 ./compile.sh
 ````
 
