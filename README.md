@@ -36,7 +36,7 @@ Create a directory with the dataset to use for the experiments.
 To execute experiments by considering two-level solutions as first thing the storage levels and the queries to use for the evaluation are generated.
 By deafault, the number of repetitions of each experiment is fixed to 3.
 
-### Indexing level experiments
+#### Indexing level experiments
 We execute these experiments on the first string of each block of the storage level by creating in advance files with these strings. 
 The experiment for CoCo-trie are the only ones divided in two phases: the construction phase and the query phase due to the high time and space consumption of construction phase.
 
