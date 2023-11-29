@@ -82,9 +82,9 @@ void read_distinguishing(char* filename, std::vector<std::string>& wordList){
 
     //read the first the words
     while (getline(ifs, word_curr)){
-        if (word_curr.size() > 0 && word_curr[word_curr.size()-1] == '\r'){
-            word_curr = word_curr.substr(0, word_curr.size()-1);
-        }
+        // if (word_curr.size() > 0 && word_curr[word_curr.size()-1] == '\r'){
+        //     word_curr = word_curr.substr(0, word_curr.size()-1);
+        // }
         if (word_curr == "") {
             continue;
         }
@@ -100,9 +100,9 @@ void read_distinguishing(char* filename, std::vector<std::string>& wordList){
     }            
 
     do {
-        if (word_next.size() > 0 && word_next[word_next.size()-1] == '\r'){
-            word_next = word_next.substr(0, word_next.size()-1); 
-        }
+        // if (word_next.size() > 0 && word_next[word_next.size()-1] == '\r'){
+        //     word_next = word_next.substr(0, word_next.size()-1); 
+        // }
         if (word_next == "") {
             continue;
         }   
