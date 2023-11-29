@@ -26,9 +26,6 @@ int read_strings_from_file(char* filename, std::vector<std::string>& wordList){
     std::string word;
     //read all the words by skipping empty strings
     while (getline(ifs, word)){
-        if (word.size() > 0 && word[word.size()-1] == '\r'){
-            word = word.substr(0, word.size()-1);
-        }
         if (word == "") continue;
         wordList.push_back(word); 
     }

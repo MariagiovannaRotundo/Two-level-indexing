@@ -158,9 +158,6 @@ size_t compute_disk_space(char* filename, int logical_block_size){
     
     //read the strings of the file one at a time
     while (getline(ifs, word)){
-        if (word.size() > 0 && word[word.size()-1] == '\r'){
-            word = word.substr(0, word.size()-1); //remove the CR-LF
-        }
         //skip empty words
         if (word == "") continue;
     
@@ -250,9 +247,6 @@ void write_compressed_strings(char* filename, int logical_block_size, int fd, st
 
     //read the uncompressed strings
     while (getline(ifs, word)){
-        if (word.size() > 0 && word[word.size()-1] == '\r'){
-            word = word.substr(0, word.size()-1); //remove the CR-LF
-        }
         //skip the empty strings
         if (word == "") continue;
 
