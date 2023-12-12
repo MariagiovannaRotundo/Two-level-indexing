@@ -271,6 +271,12 @@ void write_compressed_strings(char* filename, int logical_block_size, int fd, st
             if(str_logical_block.length() + compressed_word.length() + 1 > logical_block_size){ 
                 //create a new block that starts with the uncompressed string
 
+                if(str_logical_block.length()>logical_block_size){
+                    str_logical_block = str_logical_block.substr(0,logical_block_size);
+                    str_logical_block[logical_block_size-1] = '\0';
+                    std::cout<<"WARNING: the first string of a block is truncated (longer than the block size)"<<std::endl;
+                }
+
                 char * writing_data = str_logical_block.data();
                 size_t writing_length = str_logical_block.length();
                 //indicate the offset of the file where starts the writing and correspond at the end of the last written block
