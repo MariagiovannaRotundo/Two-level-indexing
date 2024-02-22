@@ -44,5 +44,3 @@ The experiment for CoCo-trie are the only ones divided in two phases: the constr
 
 
 
-
-

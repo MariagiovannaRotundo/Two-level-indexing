@@ -2,11 +2,7 @@
 
 For block-wise compression, direct command line methods are not available. 
 
-## Rear coding experiments
-
-
-
-## Zstd experiments
+## How to run experiments
 
 
 

@@ -16,4 +16,10 @@ target_link_libraries(generate_storage_zstd z divsufsort sdsl divsufsort64 zstd)
 add_executable(decompress_times_zstd decompress_times_zstd.cpp)
 target_link_libraries(decompress_times_zstd z divsufsort sdsl divsufsort64 zstd)
 
+add_executable(generate_storage_rear_coding generate_storage_rear_coding.cpp)
+target_link_libraries(generate_storage_rear_coding divsufsort sdsl divsufsort64)
+
+add_executable(decompress_times_rear_coding decompress_times_rear_coding.cpp)
+target_link_libraries(decompress_times_rear_coding divsufsort sdsl divsufsort64)
+
 
