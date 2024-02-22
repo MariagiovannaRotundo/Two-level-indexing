@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <algorithm>
 
-#include "caching_rank_1.hpp"
+#include "edge_caching.hpp"
 
 #define REPEAT 3
 
