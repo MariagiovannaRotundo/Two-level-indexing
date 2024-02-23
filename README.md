@@ -8,6 +8,19 @@ Repository to reproduce experiments of the two-level approach based on a succinc
 * Boost >= 1.42
 * Compiler supporting C++20
 
+
+## Datasets 
+
+The two datasets used for the experiments are available at the link: https://drive.google.com/drive/folders/1ecWQpd_cuj13RTt5MUAc17gNtxvBf__o?usp=drive_link
+
+The datasets are compressed with Zstd. After downloading, decompress them with the following command:
+
+```
+zstd --ultra -22 -d -M1024MB --long=30 -T16 --adapt
+````
+
+
+
 ## Build the project (Ubuntu)
 
 
