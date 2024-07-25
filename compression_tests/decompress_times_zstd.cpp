@@ -43,6 +43,30 @@ int main(int argc, char* argv[]) {
     size_t logical_block_size = (apprx_logical_b_size & ~(page_size - 1)) + (apprx_logical_b_size%page_size!=0)*page_size;
 
 
+    std::string output_file("block-wise_decompression_stats");
+    output_file.append(".csv");
+
+    //open the output file
+    const std::filesystem::path fresult{output_file}; //array_on_sampling.csv
+    FILE* f;
+    if(!std::filesystem::exists(fresult)){ //if the file fo not exists
+        f = std::fopen(output_file.data(), "a");
+        if(!f) {
+            std::perror("File opening failed");
+            return EXIT_FAILURE;
+        }
+
+        fprintf(f,"name_compressor,dataset,logical_b_size,avg_decomp_time,disk_space\n");// newline
+    }
+    else{
+        f = std::fopen(output_file.data(), "a");
+        if(!f) {
+            std::perror("File opening failed");
+            return EXIT_FAILURE;
+        }
+    }    
+
+
     MmappedSpace mmap_content;
 
     //read the ranks of the logical blocks
@@ -98,10 +122,14 @@ int main(int argc, char* argv[]) {
 
     std::cout << "\naverage time to decompress a block: "<<ns/unordered_blocks.size()<<std::endl;
 
+    fprintf(f,"zstd,%s,%ld,%ld,%ld\n", argv[1], logical_block_size, ns/unordered_blocks.size(), length_storage);
+
+
     //close the mmap anf the files
     mmap_content.close_mapping(length_storage);
     close_file(fd);
     
+    std::fclose(f);
 
     return 0;
 }
