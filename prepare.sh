@@ -17,7 +17,7 @@ do
 done
 
 # generate queries
-./two_level_tests/generate_query "${path}/${namefile}_B_4096.txt" 4 "${path}/${namefile}" 100000 #10000000
+./two_level_tests/generate_query "${path}/${namefile}_B_4096.txt" 4 "${path}/${namefile}" 10000000
 
 
 # generate storage
