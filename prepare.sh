@@ -3,9 +3,8 @@
 tmp=$1
 file="${tmp%.txt}"
 path="${file%/*}"
-prefix="*/"
-namefile="${file#$prefix}"
-echo 
+namefile="${file##*/}"
+echo
 
 for i in 4 8 16 32
 do
@@ -17,14 +16,13 @@ do
 done
 
 # generate queries
-./two_level_tests/generate_query "${path}/${namefile}_B_4096.txt" 4 "${path}/${namefile}" 10000000
+./two_level_tests/generate_query "${file}_B_4096.txt" 4 "${file}" 10000000
 
 
 # generate storage
 for i in 4 8 16 32
 do
    blocksize=$(($i*1024))
-   echo "${namefile}_B_${blocksize}.txt"
-   ./two_level_tests/save_first_strings "${path}/${namefile}_B_${blocksize}.txt" $i "${namefile}_first_${i}K"
-   mv "${namefile}_first_${i}K.txt" ${path}
+   echo "${file}_B_${blocksize}.txt"
+   ./two_level_tests/save_first_strings "${file}_B_${blocksize}.txt" $i "${file}_first_${i}K"
 done
