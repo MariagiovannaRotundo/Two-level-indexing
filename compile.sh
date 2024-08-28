@@ -9,3 +9,6 @@ git submodule update
 cd ../..
 cmake .
 make -j 8
+cd storage_compression_tests
+cmake .
+make -j 8
