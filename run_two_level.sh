@@ -23,8 +23,18 @@ else
    done
 fi
 
+
 if [ ! -d results ]; then
-   mkdir results
+        mkdir results
 fi
 
-mv *".csv" results
+for csvfile in ./*.csv;
+do
+   filename="${csvfile%.csv}"
+   if [ -f "results/${csvfile}" ]; then
+      cat results/${csvfile} ${csvfile} > results/${filename}_tmp.csv
+      mv results/${filename}_tmp.csv results/${csvfile}
+   else
+      mv results/${csvfile} results
+   fi
+done

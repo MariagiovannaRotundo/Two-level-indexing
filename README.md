@@ -27,7 +27,7 @@ zstd --ultra -22 -d -M1024MB --long=30 -T16 --adapt
 ```
 git clone https://github.com/MariagiovannaRotundo/Two-level-indexing
 cd Two-level-indexing
-chmod +x compile.sh prepare.sh run_indexing.sh run_two_level.sh
+chmod +x compile.sh prepare.sh run_indexing.sh run_two_level.sh run_compression.sh
 ./compile.sh
 ````
 

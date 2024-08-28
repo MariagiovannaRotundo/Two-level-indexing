@@ -15,14 +15,25 @@ do
 done
 
 
-if [ ! -d results ]; then
-   mkdir results
-fi
-
-mv *".csv" results
-
 if [ ! -d coco_tries ]; then
    mkdir coco_tries
 fi
 
 mv *".bin" coco_tries
+
+
+if [ ! -d results ]; then
+        mkdir results
+fi
+
+for csvfile in ./*.csv;
+do
+   filename="${csvfile%.csv}"
+   if [ -f "results/${csvfile}" ]; then
+      cat results/${csvfile} ${csvfile} > results/${filename}_tmp.csv
+      mv results/${filename}_tmp.csv results/${csvfile}
+   else
+      mv results/${csvfile} results
+   fi
+done
+
