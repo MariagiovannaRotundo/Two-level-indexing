@@ -16,9 +16,6 @@ add_library(sux ~/lib/sux/sux/bits/SimpleSelectHalf.hpp)
 set_target_properties(sux PROPERTIES LINKER_LANGUAGE CXX)
 
 
-add_executable(generate_storage generate_storage.cpp)
-target_link_libraries(generate_storage divsufsort sdsl divsufsort64)
-
 add_executable(generate_query generate_query.cpp)
 target_link_libraries(generate_query divsufsort sdsl divsufsort64)
 

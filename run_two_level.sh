@@ -4,37 +4,30 @@ tmp=$1
 file="${tmp%.txt}"
 filename="${file##*/}"
 
-#0 if it is unset and take the new generated queries, use our queries otherwise
-q=${2:0}
+path="./storage/rear_coding_storage/"
 
-if [[ $q == 0 ]]; then
-   for i in 4 8 16 32
-   do
-      blocksize=$(($i*1024))
-      ./two_level_tests/generate_test_array "${file}_B_${blocksize}.txt" $i "${file}-query.txt" "two_level_results"
-      ./two_level_tests/generate_test_PT "${file}_B_${blocksize}.txt" $i "${file}-query.txt" "two_level_results"
-   done
-else
-   for i in 4 8 16 32
-   do
-      blocksize=$(($i*1024))
-      ./two_level_tests/generate_test_array "${file}_B_${blocksize}.txt" $i "./query_files/${filename}-query.txt" "two_level_results"
-      ./two_level_tests/generate_test_PT "${file}_B_${blocksize}.txt" $i "./query_files/${filename}-query.txt" "two_level_results"
-   done
-fi
+query_path=${2:-"queries"}
+query_path="${query_path}/"
+
+for i in 4 8 16 32
+do
+   blocksize=$(($i*1024))
+   ./two_level_tests/generate_test_array "${path}${filename}_B_${blocksize}.txt" $i "${query_path}${filename}-query.txt" "two_level_results"
+   ./two_level_tests/generate_test_PT "${path}${filename}_B_${blocksize}.txt" $i "${query_path}${filename}-query.txt" "two_level_results"
+done
 
 
 if [ ! -d results ]; then
         mkdir results
 fi
 
-for csvfile in ./*.csv;
+for csvfile in *.csv;
 do
-   filename="${csvfile%.csv}"
+   csvfilename="${csvfile%.csv}"
    if [ -f "results/${csvfile}" ]; then
-      cat results/${csvfile} ${csvfile} > results/${filename}_tmp.csv
-      mv results/${filename}_tmp.csv results/${csvfile}
+      cat results/${csvfile} ${csvfile} > results/${csvfilename}_tmp.csv
+      mv results/${csvfilename}_tmp.csv results/${csvfile}
    else
-      mv results/${csvfile} results
+      mv ${csvfile} results
    fi
 done

@@ -2,16 +2,19 @@
 
 tmp=$1
 nameinput="${tmp%.txt}"
+filename="${nameinput##*/}"
+
+path="./storage/rear_coding_storage/"
 
 for i in 4 8 16 32
 do
-   ./indexing_level_tests/test_louds "${nameinput}_first_${i}K.txt" $i 4
-   ./indexing_level_tests/test_dfuds "${nameinput}_first_${i}K.txt" $i 4
-   ./indexing_level_tests/test_array "${nameinput}_first_${i}K.txt" $i 4
-   ./indexing_level_tests/test_PDT "${nameinput}_first_${i}K.txt" $i 4
-   ./indexing_level_tests/test_FST "${nameinput}_first_${i}K.txt" $i 4
-   ./indexing_level_tests/generate_coco "${nameinput}_first_${i}K.txt" $i
-   ./indexing_level_tests/test_coco "${nameinput}_first_${i}K.txt" $i 4
+   ./indexing_level_tests/test_louds "${path}${filename}_first_${i}K.txt" $i 4
+   ./indexing_level_tests/test_dfuds "${path}${filename}_first_${i}K.txt" $i 4
+   ./indexing_level_tests/test_array "${path}${filename}_first_${i}K.txt" $i 4
+   ./indexing_level_tests/test_PDT "${path}${filename}_first_${i}K.txt" $i 4
+   ./indexing_level_tests/test_FST "${path}${filename}_first_${i}K.txt" $i 4
+   ./indexing_level_tests/generate_coco "${path}${filename}_first_${i}K.txt" $i
+   ./indexing_level_tests/test_coco "${path}${filename}_first_${i}K.txt" $i 4
 done
 
 
@@ -26,14 +29,14 @@ if [ ! -d results ]; then
         mkdir results
 fi
 
-for csvfile in ./*.csv;
+for csvfile in *.csv;
 do
-   filename="${csvfile%.csv}"
+   csvfilename="${csvfile%.csv}"
    if [ -f "results/${csvfile}" ]; then
-      cat results/${csvfile} ${csvfile} > results/${filename}_tmp.csv
-      mv results/${filename}_tmp.csv results/${csvfile}
+      cat results/${csvfile} ${csvfile} > results/${csvfilename}_tmp.csv
+      mv results/${csvfilename}_tmp.csv results/${csvfile}
    else
-      mv results/${csvfile} results
+      mv ${csvfile} results
    fi
 done
 
