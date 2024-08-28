@@ -708,7 +708,7 @@ void name_writing_blocks_rank(char* input_file, std::string& output_file, int lo
 // - input: the name of file with the blockwise storage; the string where to write the name
 void name_reading_blocks_rank(char* input_file, std::string& output_file){
     std::string input(input_file);
-    int pos_end = input.find_last_of('.');
+    int pos_end = input.find_last_of('_');
     output_file = input.substr(0, pos_end); 
     output_file += "_blocksRank_zstd.txt";
 }

@@ -87,7 +87,7 @@ void close_file(int fd){
     int closed = close(fd);
     if(closed == -1){
         std::cout<<"ERROR IN THE CLOSING OF THE FILE"<<std::endl;
-        std::cout << "opening failure: " << std::strerror(errno) << '\n';
+        std::cout << "closing failure: " << std::strerror(errno) << '\n';
         exit(0);
     }
     std::cout << "file closed " << std::endl;
@@ -293,7 +293,7 @@ void write_compressed_strings(char* filename, int logical_block_size, int fd, st
                 }while(wrote>0 && writing_length>0);
 
                 if(wrote == -1){
-                    std::cout<<"ERROR IN THE OPENING OF THE FILE"<<std::endl;
+                    std::cout<<"ERROR IN THE WRITING OF THE FILE"<<std::endl;
                     std::cout << "writing failure: " << std::strerror(errno) << '\n';
                     exit(0);
                 }

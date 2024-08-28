@@ -11,7 +11,7 @@ do
                 ./storage_compression_tests/decompress_times_rear_coding "./storage/rear_coding_storage/${namefile}_B_${blocksize}.txt" $i
         done
         for (( j = 0 ; j < $repeat ; j += 1 )) ; do
-                ./storage_compression_tests/decompress_times_zstd "./storage/zstd_storage/${namefile}_B_${blocksize}.txt" $i
+                ./storage_compression_tests/decompress_times_zstd "./storage/zstd_storage/${namefile}_B_${blocksize}_zstd.txt" $i
         done
 done
 
@@ -23,6 +23,7 @@ for csvfile in *.csv;
 do
         csvfilename="${csvfile%.csv}"
         if [ -f "results/${csvfile}" ]; then
+                echo "$(tail -n +2 ${csvfile})" > ${csvfile} #remove the first row from the file
                 cat results/${csvfile} ${csvfile} > results/${csvfilename}_tmp.csv
                 mv results/${csvfilename}_tmp.csv results/${csvfile}
         else

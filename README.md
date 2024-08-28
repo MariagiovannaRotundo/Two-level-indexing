@@ -48,7 +48,7 @@ Create a directory with the dataset to use for the experiments.
 1. `./prepare.sh dataset.txt` generates all the files that will be used in the next experiments storing them in the same directory of the input dataset.
 2. `./run_indexing.sh dataset.txt` runs experiment about the index level placing the files with the results in a "results" directory and the files with the serialized CoCo-trie in a "coco_tries" directory.
 3. `./run_two_level.sh dataset.txt [query_path]` runs the two level experiments writing results in a two_level_results.csv file in "results" directory. To use our queries (after downloaded it) pass the path i.e. the directory name `query_files` with the optional parameter `value`.
-4. `./run_compression.sh dataset.txt [repetitions]` runs the block-wise compression experiments by considering rear coding and zstd. The results are places in a block-wise_decompression_stats.csv file in "results" directory. The number of repetitions id optional and by default is 1.
+4. `./run_compression.sh dataset.txt [repetitions]` runs the block-wise compression experiments by considering rear coding and zstd. The results are places in a block-wise_decompression_stats.csv file in "results" directory. The number of repetitions is optional and by default is set to 1.
 
 #### Two level experiments
 
