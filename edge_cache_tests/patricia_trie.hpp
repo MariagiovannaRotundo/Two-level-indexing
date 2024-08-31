@@ -685,4 +685,136 @@ class LOUDS_PatriciaTrie {
     }
 
 
+
+    //look for a string s in the storage level returning its rank
+    // - input: content of the mmap; string to search; select_0; stack that will be used for the upward traverse of the trie;
+    // vector with the ranks of the blocks; size of the logical blocks
+    size_t lookup_no_scan(MmappedSpace& mmap_space, const std::string &s, sux::bits::SimpleSelectZeroHalf<>& select_0, 
+        std::vector<size_t>& seen_arcs, sdsl::int_vector<>& blocks_rank, int logical_block_size){
+
+        int start = 0; //position in which a node starts in louds encoding
+        size_t d = 0; //used for depth in the trie
+        size_t nleaves, n, index, rank, i; 
+        char * s_block;
+        seen_arcs.clear();
+        size_t seen = 0;
+        
+        if(louds.size() == 1){//the tree has ony one block
+            int equal = std::strcmp(s.data(), mmap_space.access_at(0));
+            if(equal == -1) //s is smaller of the 1st string in the block
+                return -1; 
+            else if(equal == 0)
+                return 1;
+            else
+                return mmap_space.scan_block(s, 0, blocks_rank[1]- blocks_rank[0], 0);
+        }
+
+        //here louds[start] is equal to 1
+        rank = 0;
+        index = 0;
+
+        //while is not a leaf
+        while(louds[start] == 1){
+
+            d += lengths[rank_10(start)]; 
+            
+            if(s.length() < d){
+                //take the left-most leaf in the current subtree
+                seen_arcs[seen++] = start;
+                start = select_0.selectZero(index)+1;
+                rank = index+1;
+                index = start - rank;  
+            }
+            else{   
+                // std::cout<<"linear search"<<std::endl;
+                i = low_linear_search(index, start, (unsigned char) s[d]); 
+                // std::cout<<"return "<<i<<std::endl;
+                seen_arcs[seen++] = start + i - index;
+
+                start = select_0.selectZero(i)+1; //i-th children node
+                rank = i+1; 
+                index = start - rank;
+            }
+            
+        }
+        //here louds[start] == 0 
+
+        //the current node is a leaf (a block is identified)  
+        nleaves = rank - rank_10(start);
+        //access to the first string of the block
+        s_block = mmap_space.access_at(values[nleaves] * logical_block_size);
+
+        //compute where is the mismatch between the string of the block and the searched one
+        int lcp = 0;
+        while (s[lcp] != '\0' && s_block[lcp] != '\0' && s[lcp] == s_block[lcp])
+            lcp++;
+
+        auto len = strlen(s_block);
+        
+        if(lcp == s.length() && s.length() == len){ //string found
+            return blocks_rank[values[nleaves]] +1;
+        }
+
+        bool compare = (unsigned char)s[lcp] < (unsigned char)s_block[lcp]; 
+        
+        if(lcp > d && !compare){ //scan the current block
+            auto off = values[nleaves]; 
+            return 1;
+        }
+        //upward traversal
+
+        int x;
+        
+        while(true){
+
+            x = rank;
+            //compute the position of the current node in the parent node encoding
+            start = seen_arcs[--seen]; 
+            rank = start - x + 1;    
+
+            if(lcp < d){ //d (depth) is always > 0
+                d -= lengths[rank_10(start)]; //compute the length at the parent node
+            }
+            else {
+                if(compare){
+
+                    index = get_left_block(&start, x, select_0, seen_arcs, seen);
+                    if(index == -1)
+                        return -1;
+        
+                    rank = index;
+                    nleaves = rank - rank_10(start); // count also the current node that is a leaf
+                
+                    auto off = values[nleaves];
+
+                    return 1; 
+                }
+                else{
+                    index = x - 1;  
+                    i = low_linear_search(index, start, (unsigned char) s[d]); 
+
+                    start = select_0.selectZero(i)+1;
+                    rank = i+1; 
+
+                    //take the block to the extremely right in the current subtrie
+                    while(louds[start] == 1){
+                        //take always the last arc of the node
+                        index = get_end_zero(start) - rank;
+                        start = select_0.selectZero(index - 1)+1;
+                        rank = index; 
+                    }
+
+                    //here louds[start] == 0
+                    rank++; 
+                    nleaves = rank - rank_10(start); 
+
+                    auto off = values[nleaves-1];
+
+                    return 1; 
+                }
+            }
+        } 
+    }
+
+
 };

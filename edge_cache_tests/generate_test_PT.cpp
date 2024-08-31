@@ -8,9 +8,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <algorithm>
 
-#include "edge_caching.hpp"
+#include "patricia_trie.hpp"
 
 #define REPEAT 3
 
@@ -23,6 +22,7 @@ int read_strings_from_file(char* filename, std::vector<std::string>& wordList){
         std::cout<<"cannot open "<<filename<<"\n"<<std::endl;
         return -1;
     }
+
 
     std::string word;
     //read all the words by skipping empty strings
@@ -38,32 +38,28 @@ int read_strings_from_file(char* filename, std::vector<std::string>& wordList){
 //ecute test of the two-level approach based on Patricia Trie for the indexing level
 // - input: file where the storage level is; approximate size of the logical block expressed in KB; file that
 // contain the strings to use for queries; name of file where to write the results (.csv is appended to the specifyed name);
-// threshold to the cache size to use; statistics; how many times repeat the queries (optional. default = 3)
-//statistics (stats) --->  0 for query times (no statistics); 1 for statistics, 2 for the time to idetify a block
+// how many times repeat the queries (optional. default = 3)
 int main(int argc, char* argv[]) {
 
-    if (argc != 7 && argc != 8){
-        std::cout<<"main.cpp fileStorage logicalBlockSize[KB] fileQuery outputFileResults max_cache stats [repetitions]"<<std::endl;
+    if (argc != 6 && argc != 7){
+        std::cout<<"main.cpp fileStorage logicalBlockSize[KB] fileQuery outputFileResults stats [repetitions]"<<std::endl;
         return -1;
     }
 
-    size_t max_cache = atoi(argv[5]);
-    int stats = atoi(argv[6]); //1 for the statistics about the pages, 0 for query times, 2 for the time to idetify a block
+    int stats = atoi(argv[5]); //1 for the statistics about the pages, 0 for query times, 2 for the time to idetify a block
 
     size_t repetitions = REPEAT;
 
-    if(argc == 8){
-        repetitions = atoi(argv[7]);
-        std::cout<<"repetitions : "<<repetitions<<std::endl;
+    if(argc == 7){
+        repetitions = atoi(argv[6]);
     }
+    std::cout<<"repetitions : "<<repetitions<<std::endl;
 
     size_t apprx_logical_b_size = atoi(argv[2])<<10; // *1024 bytes
     
     // https://man7.org/linux/man-pages/man3/sysconf.3.html
     auto page_size = sysconf(_SC_PAGE_SIZE);
     size_t logical_block_size = (apprx_logical_b_size & ~(page_size - 1)) + (apprx_logical_b_size%page_size!=0)*page_size;
-
-    std::cout<<"********* "<<argv[1]<<"  B="<<logical_block_size<<";  max cache="<<max_cache<<" bytes **********"<<std::endl;
 
     MmappedSpace mmap_content;
     size_t us;
@@ -94,7 +90,6 @@ int main(int argc, char* argv[]) {
 
     
     LOUDS_PatriciaTrie louds_pt;
-    Cache cache;
 
     // read the ranks associated with the blocks of the storage level
     std::string file_storage;
@@ -117,25 +112,16 @@ int main(int argc, char* argv[]) {
         
     int height; //will contain the height of the trie
 
-    std::vector<std::string> first_strings; //contain the first string of each block
-    std::vector<size_t> frequencies(b_ranks.size()-1, 0); //a value for each block initializing each value with 0
-    
-    std::vector<freq_infos> freq_len;
-
-    {   
+    {
+        std::vector<std::string> first_strings;
         //get the first string of each logical block
         for(size_t i=0; i<b_ranks.size()-1; i++){ //the last value is associated at the end of the last block 
             std::string s(mmapped_content + i * logical_block_size);
             first_strings.push_back(s);
         }
-
-        for(size_t i=0; i< 4 * first_strings.size(); i++){
-            freq_len.push_back ({i, 0, 0, "", 0});
-        }
-
         // create the trie
         auto t0 = std::chrono::high_resolution_clock::now();
-        louds_pt.build_trie(first_strings, freq_len);
+        louds_pt.build_trie(first_strings);
         auto t1 = std::chrono::high_resolution_clock::now();
         us = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count();
         std::cout << "\nbuilt the trie in " << us << " us" << std::endl;    
@@ -152,6 +138,8 @@ int main(int argc, char* argv[]) {
         height = louds_pt.get_heigth(first_strings);
         std::cout << "\nheight of the trie: " << height << std::endl;
 
+        first_strings.clear();
+        first_strings.shrink_to_fit();
     }
 
     sdsl::util::bit_compress(blocks_rank);
@@ -188,39 +176,19 @@ int main(int argc, char* argv[]) {
     std::cout << "total size " << size +  length_storage << std::endl;
 
 
-
-    //Caching
-    
-    cache.compute_block_frequencies(frequencies, louds_pt, argv[3], louds_select_0, blocks_rank, logical_block_size, height, mmap_content);
-    cache.compute_freq_edges(first_strings, frequencies, louds_pt, louds_select_0, freq_len);//freq_nodes, length_nodes);
-    cache.select_edges(freq_len, louds_pt, max_cache);
-
-    //cache size
-    auto size_cache = cache.getCacheSize();
-    std::cout<<"used cache size: "<<size_cache<<" bytes"<<std::endl;
-
-
-    //clear data structures
-
-    frequencies.clear();            
-    frequencies.shrink_to_fit();    
-
-    freq_len.clear();
-    freq_len.shrink_to_fit();
-
-    first_strings.clear();
-    first_strings.shrink_to_fit();
-
-
-
-    //Queries
+    //here queries start
 
     size_t rank;
-    std::vector<size_t> seen_arcs; //stack used to the upward traversal
+    //stack used to the upward traversal
+    std::vector<size_t> seen_arcs;
     seen_arcs.resize(height);
-    std::vector<std::string> query_word; //vector with the queries
-    
-    read_strings_from_file(argv[3], query_word); //read from file the strings to use for queries
+
+    // louds_pt.print_firsts_labels(30);
+
+    //vector with the queries
+    std::vector<std::string> query_word;
+    //read from file the strings to use for queries
+    read_strings_from_file(argv[3], query_word);
 
     size_t fault_page = 0; //in case of analysis with mincore function
     size_t random_access_to_pages = 0;
@@ -232,21 +200,20 @@ int main(int argc, char* argv[]) {
         auto t0 = std::chrono::high_resolution_clock::now();
         for(int j=0; j<repetitions; j++){
             for(size_t i=0; i< query_word.size(); i++){
-                
-                rank = cache.lookup(mmap_content, query_word[i], louds_select_0, seen_arcs, blocks_rank, logical_block_size, louds_pt);
-                
-                //to check the correctness of the function in the case all searched strings are or not in the dataset
+
+                rank = louds_pt.lookup(mmap_content, query_word[i], louds_select_0, seen_arcs, blocks_rank, logical_block_size);
+
+                //to check the correctness of the function in the case all searched strings are in the dataset
                 // if(rank==size_t(-1)){
                 //     std::cout << "looking for "<<query_word[i]<<std::endl;
                 //     std::cout << "string NOT found"<<std::endl;
                 //     return 0;
                 // }
-
             }
         }
         auto t1 = std::chrono::high_resolution_clock::now();
         ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
-
+    
         volatile auto temp = rank;
 
         std::cout << "\naverage time for the lookup: "<<ns/(query_word.size()*repetitions)<<"\n"<<std::endl;
@@ -255,8 +222,8 @@ int main(int argc, char* argv[]) {
         for(int j=0; j<repetitions; j++){
             for(size_t i=0; i< query_word.size(); i++){
 
-                rank = cache.lookup_mincore(mmap_content, query_word[i], louds_select_0, seen_arcs, blocks_rank, logical_block_size, 
-                    louds_pt, &fault_page, &random_access_to_pages);
+                rank = louds_pt.lookup_mincore(mmap_content, query_word[i], louds_select_0, seen_arcs, blocks_rank, 
+                    logical_block_size, &fault_page, &random_access_to_pages);
 
                 //to check the correctness of the function in the case all searched strings are in the dataset
                 // if(rank==size_t(-1)){
@@ -264,7 +231,6 @@ int main(int argc, char* argv[]) {
                 //     std::cout << "string NOT found"<<std::endl;
                 //     return 0;
                 // }
-
             }
         }
     }
@@ -272,18 +238,19 @@ int main(int argc, char* argv[]) {
         auto t0 = std::chrono::high_resolution_clock::now();
         for(int j=0; j<repetitions; j++){
             for(size_t i=0; i< query_word.size(); i++){
-                rank = cache.lookup_no_scan(mmap_content, query_word[i], louds_select_0, seen_arcs, blocks_rank, logical_block_size, louds_pt);
+                rank = louds_pt.lookup_no_scan(mmap_content, query_word[i], louds_select_0, seen_arcs, blocks_rank, logical_block_size);
             }
         }
         auto t1 = std::chrono::high_resolution_clock::now();
         ns_no_scan = std::chrono::duration_cast<std::chrono::nanoseconds>(t1 - t0).count();
-        
+    
         volatile auto temp = rank;
 
-        std::cout << "\naverage time to identify the correct block "<<ns_no_scan/(query_word.size()*repetitions)<<"\n"<<std::endl;
+        std::cout << "\naverage time to identify the correct block: "<<ns_no_scan/(query_word.size()*repetitions)<<"\n"<<std::endl;
     }
-
-
+    
+            
+    
     //I/Os analysis
 
     std::cout<<"tot page faults during query process "<<fault_page<<std::endl;
@@ -304,14 +271,15 @@ int main(int argc, char* argv[]) {
         }
     }
     std::cout<<std::endl;
-    std::cout<<"num pages in cache at the end of the execution: "<<cached_pages<<" on a total num pages "<<num_pages<<std::endl;
+    std::cout<<"num pages in cache : "<<cached_pages<<" total num pages "<<num_pages<<std::endl;
 
-    fprintf(f,"PT-LOUDS-cache,%s,%ld,%ld,%ld,%ld,%ld,%s,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld\n", argv[1], logical_block_size, 
-            ns/(query_word.size()*repetitions), size, length_storage, us, argv[3], size_cache, fault_page, 
-            repetitions, cached_pages, num_pages, max_cache, random_access_to_pages, ns_no_scan/(query_word.size()*repetitions));
+    fprintf(f,"PT-LOUDS-no-cache,%s,%ld,%ld,%ld,%ld,%ld,%s,%ld,%ld,%ld,%ld,%ld,%ld,%ld,%ld\n", argv[1], logical_block_size, 
+            ns/(query_word.size()*repetitions), size, length_storage, us, argv[3], size_t(0), fault_page, 
+            repetitions, cached_pages, num_pages, size_t(0), random_access_to_pages, ns_no_scan/(query_word.size()*repetitions));
+
       
 
-    //close the mmap and the files
+    //close the mmap anf the files
     mmap_content.close_mapping(length_storage);
 
     close_file(fd);

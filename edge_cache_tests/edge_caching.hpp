@@ -848,8 +848,7 @@ class Cache {
 
     size_t lookup_mincore(MmappedSpace& mmap_space, const std::string &s, sux::bits::SimpleSelectZeroHalf<>& select_0, 
         std::vector<size_t>& seen_arcs, sdsl::int_vector<>& blocks_rank, int logical_block_size, LOUDS_PatriciaTrie & louds_pt,
-        size_t * fault_page, size_t * access_to_pages, std::vector<size_t>& accessed_pages_indexes,
-        size_t * tot_visited_nodes, std::vector<size_t>& num_nodes, size_t * random_access_to_pages){
+        size_t * fault_page, size_t * random_access_to_pages){
 
         int start = 0; //position in which a node starts in louds encoding
         size_t d = 0; //used for depth in the trie
@@ -864,9 +863,6 @@ class Cache {
         size_t lcp_cache = 0;
 
         size_t child_len;
-
-        (*tot_visited_nodes)++; //to count the root
-        num_nodes.push_back(start);
         
         // for the mincore function
         char * mmapped_content = mmap_space.get_mmapped_content();
@@ -898,9 +894,6 @@ class Cache {
 
                 start = seen_arcs[--seen]; 
 
-                (*tot_visited_nodes)++; 
-                num_nodes.push_back(start);
-
                 index = louds_pt.get_left_block(&start, rank, select_0, seen_arcs, seen);
                 if(index == -1)
                     return -1;
@@ -910,8 +903,6 @@ class Cache {
             
                 auto off = louds_pt.values[nleaves];
 
-                accessed_pages_indexes.push_back(off);
-
                 res_mincore = mincore(mmapped_content + off * logical_block_size, page_size, vec);
                 if(res_mincore == -1){
                     std::cout<<"ERROR IN THE MINCORE FUNCTION"<<std::endl;
@@ -920,7 +911,6 @@ class Cache {
                 if((int)(vec[0] & 1) == 0){
                     (*fault_page)++;
                 }
-                (*access_to_pages)++;
                 (*random_access_to_pages)++;
 
                 return mmap_space.scan_block(s, off * logical_block_size, blocks_rank[off+1] - blocks_rank[off], blocks_rank[off]); 
@@ -936,9 +926,6 @@ class Cache {
                 rank = i+1; 
                 index = start - rank;
 
-                (*tot_visited_nodes)++; 
-                num_nodes.push_back(start);
-
                 // bool first_char = ((unsigned char)s[d] == louds_pt.labels[i]);
                 int first_char = (unsigned char)s[d] - louds_pt.labels[i];
 
@@ -949,17 +936,12 @@ class Cache {
                         index = louds_pt.get_end_zero(start) - rank;
                         start = select_0.selectZero(index - 1)+1;
                         rank = index; 
-
-                        (*tot_visited_nodes)++; 
-                        num_nodes.push_back(start);
                     }
                     //here louds[start] == 0
                     rank++; 
                     nleaves = rank - louds_pt.rank_10(start); 
 
                     auto off = louds_pt.values[nleaves-1];
-
-                    accessed_pages_indexes.push_back(off);
 
                     res_mincore = mincore(mmapped_content + off * logical_block_size, page_size, vec);
                     if(res_mincore == -1){
@@ -969,7 +951,6 @@ class Cache {
                     if((int)(vec[0] & 1) == 0){
                         (*fault_page)++;
                     }
-                    (*access_to_pages)++;
                     (*random_access_to_pages)++;
 
                     return mmap_space.scan_block_with_lcp(s, d, off * logical_block_size, blocks_rank[off+1]-blocks_rank[off], blocks_rank[off]); 
@@ -977,9 +958,6 @@ class Cache {
                 
                 if(first_char < 0){ 
                     start = seen_arcs[--seen]; 
-
-                    (*tot_visited_nodes)++; 
-                    num_nodes.push_back(start);
 
                     index = louds_pt.get_left_block(&start, rank, select_0, seen_arcs, seen);
                     if(index == -1)
@@ -990,8 +968,6 @@ class Cache {
                 
                     auto off = louds_pt.values[nleaves];
 
-                    accessed_pages_indexes.push_back(off);
-
                     res_mincore = mincore(mmapped_content + off * logical_block_size, page_size, vec);
                     if(res_mincore == -1){
                         std::cout<<"ERROR IN THE MINCORE FUNCTION"<<std::endl;
@@ -1000,7 +976,6 @@ class Cache {
                     if((int)(vec[0] & 1) == 0){
                         (*fault_page)++;
                     }
-                    (*access_to_pages)++;
                     (*random_access_to_pages)++;
 
                     return mmap_space.scan_block(s, off * logical_block_size, blocks_rank[off+1] - blocks_rank[off], blocks_rank[off]); 
@@ -1044,17 +1019,12 @@ class Cache {
                             index = louds_pt.get_end_zero(start) - rank;
                             start = select_0.selectZero(index - 1)+1;
                             rank = index; 
-
-                            (*tot_visited_nodes)++; 
-                            num_nodes.push_back(start);
                         }
                         //here louds[start] == 0
                         rank++; 
                         nleaves = rank - louds_pt.rank_10(start); 
 
                         auto off = louds_pt.values[nleaves-1];
-
-                        accessed_pages_indexes.push_back(off);
 
                         res_mincore = mincore(mmapped_content + off * logical_block_size, page_size, vec);
                         if(res_mincore == -1){
@@ -1064,16 +1034,12 @@ class Cache {
                         if((int)(vec[0] & 1) == 0){
                             (*fault_page)++;
                         }
-                        (*access_to_pages)++;
                         (*random_access_to_pages)++;
 
                         return mmap_space.scan_block_with_lcp(s, lcp_cache, off * logical_block_size, blocks_rank[off+1]-blocks_rank[off], blocks_rank[off]); 
                     }
                     if(compare < 0){ 
                         start = seen_arcs[--seen]; 
-
-                        (*tot_visited_nodes)++; 
-                        num_nodes.push_back(start);
 
                         index = louds_pt.get_left_block(&start, rank, select_0, seen_arcs, seen);
                         if(index == -1)
@@ -1084,8 +1050,6 @@ class Cache {
                     
                         auto off = louds_pt.values[nleaves];
 
-                        accessed_pages_indexes.push_back(off);
-
                         res_mincore = mincore(mmapped_content + off * logical_block_size, page_size, vec);
                         if(res_mincore == -1){
                             std::cout<<"ERROR IN THE MINCORE FUNCTION"<<std::endl;
@@ -1094,7 +1058,6 @@ class Cache {
                         if((int)(vec[0] & 1) == 0){
                             (*fault_page)++;
                         }
-                        (*access_to_pages)++;
                         (*random_access_to_pages)++;
 
                         return mmap_space.scan_block(s, off * logical_block_size, blocks_rank[off+1] - blocks_rank[off], blocks_rank[off]); 
@@ -1115,9 +1078,6 @@ class Cache {
                 start = select_0.selectZero(index)+1;
                 rank = index+1;
                 index = start - rank;  //rank1
-
-                (*tot_visited_nodes)++; 
-                num_nodes.push_back(start);
             }
             else{   
 
@@ -1128,10 +1088,6 @@ class Cache {
                 start = select_0.selectZero(i)+1; //i-th children node
                 rank = i+1; 
                 index = start - rank;
-
-                (*tot_visited_nodes)++; 
-                num_nodes.push_back(start);
-
             }
         }
         //here louds[start] == 0 
@@ -1143,8 +1099,6 @@ class Cache {
             return blocks_rank[louds_pt.values[nleaves]];
         }
 
-        accessed_pages_indexes.push_back(louds_pt.values[nleaves]);
-
         res_mincore = mincore(mmapped_content + louds_pt.values[nleaves] * logical_block_size, page_size, vec);
         if(res_mincore == -1){
             std::cout<<"ERROR IN THE MINCORE FUNCTION"<<std::endl;
@@ -1153,7 +1107,6 @@ class Cache {
         if((int)(vec[0] & 1) == 0){
             (*fault_page)++;
         }
-        (*access_to_pages)++;
         (*random_access_to_pages)++;
 
         size_t first_off = louds_pt.values[nleaves];
@@ -1192,8 +1145,6 @@ class Cache {
         if(path_in_cache){ //scan the previous block (s < s_block)
             auto off = louds_pt.values[nleaves] -1; 
 
-            accessed_pages_indexes.push_back(off);
-
             res_mincore = mincore(mmapped_content + off * logical_block_size, page_size, vec);
             if(res_mincore == -1){
                 std::cout<<"ERROR IN THE MINCORE FUNCTION"<<std::endl;
@@ -1202,7 +1153,6 @@ class Cache {
             if((int)(vec[0] & 1) == 0){
                 (*fault_page)++;
             }
-            (*access_to_pages)++;
 
             return mmap_space.scan_block(s, off * logical_block_size, blocks_rank[off+1] - blocks_rank[off], blocks_rank[off]); 
         }
@@ -1215,9 +1165,6 @@ class Cache {
             //compute the position of the current node in the parent node encoding
             start = seen_arcs[--seen]; 
             rank = start - x + 1;    
-
-            (*tot_visited_nodes)++; 
-            num_nodes.push_back(start);
 
             if(lcp < d){ //d (depth) is always > 0
                 d -= louds_pt.lengths[louds_pt.rank_10(start)]; //compute the length at the parent node
@@ -1234,8 +1181,6 @@ class Cache {
                 
                     auto off = louds_pt.values[nleaves];
 
-                    accessed_pages_indexes.push_back(off);
-
                     res_mincore = mincore(mmapped_content + off * logical_block_size, page_size, vec);
                     if(res_mincore == -1){
                         std::cout<<"ERROR IN THE MINCORE FUNCTION"<<std::endl;
@@ -1244,7 +1189,6 @@ class Cache {
                     if((int)(vec[0] & 1) == 0){
                         (*fault_page)++;
                     }
-                    (*access_to_pages)++;
 
                     if(abs(int(first_off - off)) > 1){
                         (*random_access_to_pages)++;
@@ -1259,18 +1203,12 @@ class Cache {
                     start = select_0.selectZero(i)+1;
                     rank = i+1; 
 
-                    (*tot_visited_nodes)++; 
-                    num_nodes.push_back(start);
-
                     //take the block to the extremely right in the current subtrie
                     while(louds_pt.louds[start] == 1){
                         //take always the last arc of the node
                         index = louds_pt.get_end_zero(start) - rank;
                         start = select_0.selectZero(index - 1)+1;
                         rank = index; 
-
-                        (*tot_visited_nodes)++; 
-                        num_nodes.push_back(start);
                     }
 
                     //here louds[start] == 0
@@ -1278,8 +1216,6 @@ class Cache {
                     nleaves = rank - louds_pt.rank_10(start); 
 
                     auto off = louds_pt.values[nleaves-1];
-
-                    accessed_pages_indexes.push_back(off);
 
                     res_mincore = mincore(mmapped_content + off * logical_block_size, page_size, vec);
                     if(res_mincore == -1){
@@ -1289,7 +1225,6 @@ class Cache {
                     if((int)(vec[0] & 1) == 0){
                         (*fault_page)++;
                     }
-                    (*access_to_pages)++;
 
                     if(abs(int(first_off - off)) > 1){
                         (*random_access_to_pages)++;
