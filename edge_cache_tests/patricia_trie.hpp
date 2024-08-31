@@ -69,6 +69,130 @@ class LOUDS_PatriciaTrie {
     sdsl::int_vector<> values;
     sdsl::rank_support_v<10, 2> rank_10; //used to count internal nodes using louds sequence
 
+
+
+    void build_trie(std::vector<std::string>& wordList){
+        
+        /* 4 is a good number beacuse the number of 0s is equal to the number of strings + the 
+        number of internal nodes. For each internal node there is an entering arc except for the root.
+        There is an entering arc also for the nodes that represent the strings. So, the number of
+        used bit is equal to the number of (strings + the number of internal nodes that corresponds to 
+        the 0s) * 2 - 1 (that corresponds to the 1s and the root has not an entering arc).
+        The number of internal nodes is O(n) so, we have (n+O(n))*2-1 = O(4n). 
+        So, we use 4*n as upper bound.
+        */
+        sdsl::bit_vector louds_tmp = sdsl::bit_vector(4 * wordList.size(), 0);
+        sdsl::int_vector<> lengths_tmp(wordList.size());
+        sdsl::int_vector<> values_tmp(wordList.size());
+
+        bfs_node b;
+        b.i = 0;
+        b.j = (int)wordList.size();
+        b.depth = 0;
+        b.depth_parent = 0;
+
+        std::queue<bfs_node> bfs_visit; //queue used to visit "nodes" of the trie in LOUDS order
+        bfs_visit.push(b);
+
+        int p = 0; //position in louds_tmp bit vector
+        int v = 0;
+        int l = 0;
+
+        while(!bfs_visit.empty()){
+
+            std::queue<int> indexes;
+            std::queue<int> level_labels;
+
+            bfs_node b = bfs_visit.front();
+
+            if(b.i>=b.j){ //there is an error
+                std::cout<<"Error "<<std::endl;
+                break;
+            }
+            if(b.j-b.i==1){ //the node has not children but a string (value), a leaf
+                values_tmp[v++] = b.i;
+                p++; //by default all bits in louds_tmp[p] there is 0. So, only increment p
+                bfs_visit.pop();  
+                continue;
+            }
+
+            //get the letter in position d (d^th char) in the first word
+            unsigned char last = (unsigned char) wordList[b.i][b.depth]; 
+
+            //localize all the subtries starting in the node we are examinating
+            indexes.push(b.i);
+            level_labels.push(last);
+            for(int k=b.i+1; k<b.j; k++){
+                if((unsigned char) wordList[k][b.depth] != last){
+                    last = (unsigned char)wordList[k][b.depth];
+                    indexes.push(k);
+                    level_labels.push(last);
+                }
+            }
+            indexes.push(b.j);
+
+            //if for all strings the d-th caracter is the same
+            if(level_labels.size() == 1){
+                if(b.depth==0){//it is the root node
+                    louds_tmp[p] = 1;
+                    p+=2;
+
+                    lengths_tmp[l++] = 0;
+                    labels.push_back(level_labels.front());
+
+                    bfs_visit.front().depth_parent = 0;
+                    bfs_visit.front().depth += 1;
+                    
+                }
+                else{//count the same node later because the tree is compressed
+                    bfs_visit.front().depth += 1;
+                } 
+            }
+            else{//look at all the subtries 
+                bfs_visit.pop();   
+                lengths_tmp[l++] = b.depth - b.depth_parent;
+
+                while(!level_labels.empty()){
+
+                    //insert in LOUDS a 1 for 
+                    louds_tmp[p++] = 1;
+
+                    labels.push_back(level_labels.front());
+                    level_labels.pop();
+
+                    //for each subtrie
+                    bfs_node bc;
+                    bc.i = indexes.front();
+                    indexes.pop();
+                    bc.j = indexes.front();
+                    bc.depth_parent = b.depth;
+                    bc.depth = b.depth+1;
+                    bfs_visit.push(bc);
+                }
+                p++;//set the 0 as last bit for that node
+            }
+        }
+
+        values_tmp.resize(v);
+        lengths_tmp.resize(l);
+        louds_tmp.resize(p);
+
+        labels.shrink_to_fit();
+
+        sdsl::util::bit_compress(values_tmp);  
+        sdsl::util::bit_compress(lengths_tmp);  
+
+        louds = louds_tmp;
+        lengths = lengths_tmp;
+        values = values_tmp;
+
+        sdsl::rank_support_v<10, 2> rank_10_temp(&louds);
+
+        rank_10 = rank_10_temp;
+
+    }
+    
+
     //method to create the Patricia trie
     // - input: a vector with the strings to use for the building; a vector of pointers to elaf in the order the leaves
     void build_trie(std::vector<std::string>& wordList, std::vector<freq_infos>& sub_str){

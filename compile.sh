@@ -11,4 +11,7 @@ cmake .
 make -j 8
 cd storage_compression_tests
 cmake .
-make -j 8
+make -j 
+cd ../edge_cache_tests
+cmake .
+make -j

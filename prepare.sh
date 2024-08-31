@@ -34,6 +34,9 @@ done
 # generate queries
 ./two_level_tests/generate_query "./storage/rear_coding_storage/${namefile}_B_4096.txt" 4 "./queries/${namefile}" 10000000
 
+# generate adversarial queries
+./edge_cache_tests/generate_adversarial_query "./storage/rear_coding_storage/${namefile}_B_4096.txt" 4 "./queries/${namefile}" 10000000
+
 
 # generate file with the first strings
 for i in 4 8 16 32

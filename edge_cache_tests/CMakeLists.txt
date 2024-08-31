@@ -21,5 +21,6 @@ target_link_libraries(generate_test_caching divsufsort sdsl divsufsort64)
 add_executable(generate_test_no_caching generate_test_no_caching.cpp)
 target_link_libraries(generate_test_no_caching divsufsort sdsl divsufsort64)
 
-
+add_executable(generate_adversarial_query generate_adversarial_query.cpp)
+target_link_libraries(generate_adversarial_query divsufsort sdsl divsufsort64)
 
