@@ -18,19 +18,8 @@ set_target_properties(sux PROPERTIES LINKER_LANGUAGE CXX)
 add_executable(generate_test_caching generate_test_caching.cpp)
 target_link_libraries(generate_test_caching divsufsort sdsl divsufsort64)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+add_executable(generate_test_no_caching generate_test_no_caching.cpp)
+target_link_libraries(generate_test_no_caching divsufsort sdsl divsufsort64)
 
 
 
