@@ -499,4 +499,190 @@ class LOUDS_PatriciaTrie {
         } 
     }
 
+
+
+    //to compute the number of page faults and of random I/O
+    size_t lookup_mincore(MmappedSpace& mmap_space, const std::string &s, sux::bits::SimpleSelectZeroHalf<>& select_0, 
+        std::vector<size_t>& seen_arcs, sdsl::int_vector<>& blocks_rank, int logical_block_size, size_t * fault_page,
+        size_t * random_access_to_pages){
+
+        int start = 0; //position in which a node starts in louds encoding
+        size_t d = 0; //used for depth in the trie
+        size_t nleaves, n, index, rank, i; 
+        char * s_block;
+        seen_arcs.clear();
+        size_t seen = 0;
+
+        //for the mincore function
+        char * mmapped_content = mmap_space.get_mmapped_content();
+        auto page_size = sysconf(_SC_PAGE_SIZE);
+        unsigned char vec[1];
+        int res_mincore;
+
+        auto page_for_block = logical_block_size/page_size;
+        
+        if(louds.size() == 1){//the tree has ony one block
+            int equal = std::strcmp(s.data(), mmap_space.access_at(0));
+            if(equal == -1) //s is smaller of the 1st string in the block
+                return -1; 
+            else if(equal == 0)
+                return 1;
+            else
+                return mmap_space.scan_block(s, 0, blocks_rank[1]- blocks_rank[0], 0);
+        }
+
+        //here louds[start] is equal to 1
+        rank = 0;
+        index = 0;
+
+        //while is not a leaf
+        while(louds[start] == 1){
+
+            d += lengths[rank_10(start)]; 
+            
+            if(s.length() < d){
+                //take the left-most leaf in the current subtree
+                seen_arcs[seen++] = start;
+                start = select_0.selectZero(index)+1;
+                rank = index+1;
+                index = start - rank;  
+            }
+            else{   
+                i = low_linear_search(index, start, (unsigned char) s[d]); 
+
+                seen_arcs[seen++] = start + i - index;
+
+                start = select_0.selectZero(i)+1; //i-th children node
+                rank = i+1; 
+                index = start - rank;
+            }
+            
+        }
+        //here louds[start] == 0 
+
+        //the current node is a leaf (a block is identified)  
+        nleaves = rank - rank_10(start);
+        //access to the first string of the block
+
+        res_mincore = mincore(mmapped_content + values[nleaves] * logical_block_size, page_size, vec);
+        if(res_mincore == -1){
+            std::cout<<"ERROR IN THE MINCORE FUNCTION"<<std::endl;
+            std::cout << "mincore error failed: " << std::strerror(errno) << '\n';
+        }
+        if((int)(vec[0] & 1) == 0){
+            (*fault_page)++;
+        }
+        (*random_access_to_pages)++;
+
+        size_t first_off = values[nleaves];
+
+        s_block = mmap_space.access_at(values[nleaves] * logical_block_size);
+        
+        //compute where is the mismatch between the string of the block and the searched one
+        int lcp = 0;
+        while (s[lcp] != '\0' && s_block[lcp] != '\0' && s[lcp] == s_block[lcp])
+            lcp++;
+
+        auto len = strlen(s_block);
+        
+        if(lcp == s.length() && s.length() == len){ //string found
+            return blocks_rank[values[nleaves]] +1;
+        }
+
+        bool compare = (unsigned char)s[lcp] < (unsigned char)s_block[lcp]; 
+        
+        if(lcp > d && !compare){ //scan the current block
+            auto off = values[nleaves]; 
+
+            res_mincore = mincore(mmapped_content + off * logical_block_size, page_size, vec);
+            if(res_mincore == -1){
+                std::cout<<"ERROR IN THE MINCORE FUNCTION"<<std::endl;
+                std::cout << "mincore error failed: " << std::strerror(errno) << '\n';
+            }
+            if((int)(vec[0] & 1) == 0){
+                (*fault_page)++;
+            }
+
+            return mmap_space.scan_block_no_first(s, lcp, len, off* logical_block_size, blocks_rank[off+1] - blocks_rank[off], blocks_rank[off]);
+        }
+        //upward traversal
+
+        int x;
+        
+        while(true){
+
+            x = rank;
+            //compute the position of the current node in the parent node encoding
+            start = seen_arcs[--seen]; 
+            rank = start - x + 1;    
+
+            if(lcp < d){ //d (depth) is always > 0
+                d -= lengths[rank_10(start)]; //compute the length at the parent node
+            }
+            else {
+                if(compare){
+
+                    index = get_left_block(&start, x, select_0, seen_arcs, seen);
+                    if(index == -1)
+                        return -1;
+        
+                    rank = index;
+                    nleaves = rank - rank_10(start); // count also the current node that is a leaf
+                
+                    auto off = values[nleaves];
+
+                    res_mincore = mincore(mmapped_content + off * logical_block_size, page_size, vec);
+                    if(res_mincore == -1){
+                        std::cout<<"ERROR IN THE MINCORE FUNCTION"<<std::endl;
+                        std::cout << "mincore error failed: " << std::strerror(errno) << '\n';
+                    }
+                    if((int)(vec[0] & 1) == 0){
+                        (*fault_page)++;
+                    }
+                    if(abs(int(first_off - off)) > 1){
+                        (*random_access_to_pages)++;
+                    }
+
+                    return mmap_space.scan_block(s, off * logical_block_size, blocks_rank[off+1] - blocks_rank[off], blocks_rank[off]); 
+                }
+                else{
+                    index = x - 1;  
+                    i = low_linear_search(index, start, (unsigned char) s[d]); 
+
+                    start = select_0.selectZero(i)+1;
+                    rank = i+1; 
+
+                    //take the block to the extremely right in the current subtrie
+                    while(louds[start] == 1){
+                        //take always the last arc of the node
+                        index = get_end_zero(start) - rank;
+                        start = select_0.selectZero(index - 1)+1;
+                        rank = index; 
+                    }
+
+                    //here louds[start] == 0
+                    rank++; 
+                    nleaves = rank - rank_10(start); 
+
+                    auto off = values[nleaves-1];
+
+                    res_mincore = mincore(mmapped_content + off * logical_block_size, page_size, vec);
+                    if(res_mincore == -1){
+                        std::cout<<"ERROR IN THE MINCORE FUNCTION"<<std::endl;
+                        std::cout << "mincore error failed: " << std::strerror(errno) << '\n';
+                    }
+                    if((int)(vec[0] & 1) == 0){
+                        (*fault_page)++;
+                    }
+                    if(abs(int(first_off - off)) > 1){
+                        (*random_access_to_pages)++;
+                    }
+
+                    return mmap_space.scan_block(s, off * logical_block_size, blocks_rank[off+1]-blocks_rank[off], blocks_rank[off]); 
+                }
+            }
+        } 
+    }
+
+
 };
