@@ -7,9 +7,9 @@ Repository to reproduce experiments of the two-level approach based on a succinc
 * Cmake >= 3.12
 * Boost >= 1.42
 * Compiler supporting C++20
-* SDSL: https://github.com/simongog/sdsl-lite
-* zstd
-* sux
+* SDSL (https://github.com/simongog/sdsl-lite)
+* zstd (https://github.com/facebook/zstd)
+* Sux (https://github.com/vigna/sux)
 
 
 ## Datasets 
@@ -30,7 +30,7 @@ zstd --ultra -22 -d -M1024MB --long=30 -T16 --adapt
 ```
 git clone https://github.com/MariagiovannaRotundo/Two-level-indexing
 cd Two-level-indexing
-chmod +x compile.sh prepare.sh run_indexing.sh run_two_level.sh run_compression.sh
+chmod +x compile.sh prepare.sh run_indexing.sh run_two_level.sh run_compression.sh run_edge_cache.sh
 ./compile.sh
 ````
 
