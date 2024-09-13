@@ -20,7 +20,7 @@ The datasets are compressed with Zstd. After downloading, decompress them with t
 
 ```
 zstd --ultra -22 -d -M1024MB --long=30 -T16 --adapt
-````
+```
 
 
 
@@ -32,7 +32,7 @@ git clone https://github.com/MariagiovannaRotundo/Two-level-indexing
 cd Two-level-indexing
 chmod +x compile.sh prepare.sh run_indexing.sh run_two_level.sh run_compression.sh run_edge_cache.sh
 ./compile.sh
-````
+```
 
 ## Experiments
 
@@ -61,4 +61,5 @@ The experiment for CoCo-trie are the only ones divided in two phases: the constr
 #### Two level experiments
 
 To execute experiments by considering two-level solutions as first thing the storage levels and the queries to use for the evaluation are generated.
-By deafault, the number of repetitions of each experiment is fixed to 3.
+By deafault, in the C++ code the number of repetitions of each experiment is fixed to 3.
+
