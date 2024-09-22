@@ -50,6 +50,7 @@ do
       echo "$(tail -n +2 ${csvfile})" > ${csvfile} #remove the first row from the file
       cat results/${csvfile} ${csvfile} > results/${csvfilename}_tmp.csv
       mv results/${csvfilename}_tmp.csv results/${csvfile}
+      rm ${csvfile}
    else
       mv ${csvfile} results
    fi
