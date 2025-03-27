@@ -14,7 +14,7 @@ Repository to reproduce experiments of the two-level approach based on a succinc
 
 ## Datasets 
 
-The two datasets used for the experiments are available at the link: https://drive.google.com/drive/folders/1ecWQpd_cuj13RTt5MUAc17gNtxvBf__o?usp=drive_link
+The two datasets used for the experiments are available at the link: https://unipiit-my.sharepoint.com/:f:/g/personal/m_rotundo1_studenti_unipi_it/EsqeTw4WZWFEvp49K8G4w1ABQ5ILxjOJnEZjhktlgBRlNg?e=irQxuX
 
 The datasets are compressed with Zstd. After downloading, decompress them with the following command:
 
