@@ -1,5 +1,7 @@
 #!/bin/sh
 
+git config --global url."https://github.com/".insteadOf git://github.com/
+
 git submodule update --init --recursive
 cd indexing_level_tests/CoCo-trie
 bash ./lib/adapted_code/move.sh
